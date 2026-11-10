@@ -2,158 +2,491 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Secret Bot</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #1a1a1a);
-            color: var(--tg-theme-text-color, #ffffff);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
             padding: 20px;
-            margin: 0;
+            overflow-x: hidden;
         }
+        
         .container {
             max-width: 400px;
             margin: 0 auto;
+            animation: fadeIn 0.5s ease;
         }
-        h1 {
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
             text-align: center;
-            font-size: 24px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            font-size: 64px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .mode-selector {
+            display: grid;
+            gap: 15px;
             margin-bottom: 30px;
         }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
+        
+        .mode-btn {
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .mode-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .mode-btn.hide {
+            background: linear-gradient(135deg, rgba(102,126,234,0.3) 0%, rgba(118,75,162,0.3) 100%);
+            border-color: rgba(102,126,234,0.5);
+        }
+        
+        .mode-btn.reveal {
+            background: linear-gradient(135deg, rgba(240,147,251,0.3) 0%, rgba(245,87,108,0.3) 100%);
+            border-color: rgba(240,147,251,0.5);
+        }
+        
+        .mode-icon {
+            font-size: 32px;
+        }
+        
+        .form-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .upload-zone {
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone:hover {
+            border-color: rgba(102,126,234,0.8);
+            background: rgba(102,126,234,0.1);
+        }
+        
+        .upload-zone.has-image {
+            border-style: solid;
+            border-color: #667eea;
+            background: rgba(102,126,234,0.1);
+        }
+        
+        .upload-zone input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+        
+        .upload-text {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .preview-container {
+            display: none;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .preview-container.show {
+            display: block;
+            animation: zoomIn 0.3s ease;
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .preview-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(245,87,108,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s;
         }
-        .btn:active {
-            transform: scale(0.95);
+        
+        .remove-image:active {
+            transform: scale(0.9);
         }
-        .btn-hide {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-reveal {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
+        
         .input-group {
-            margin: 20px 0;
+            margin-bottom: 20px;
         }
+        
         label {
             display: block;
             margin-bottom: 8px;
             font-size: 14px;
             opacity: 0.8;
         }
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--tg-theme-hint-color, #666);
-            border-radius: 8px;
-            background: var(--tg-theme-secondary-bg-color, #2a2a2a);
-            color: var(--tg-theme-text-color, #fff);
-            font-size: 16px;
-            box-sizing: border-box;
-        }
+        
         textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        input[type="file"] {
             width: 100%;
-            padding: 10px;
-            background: var(--tg-theme-secondary-bg-color, #2a2a2a);
-            border-radius: 8px;
-            color: var(--tg-theme-text-color, #fff);
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
         }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+        }
+        
+        .submit-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        
+        .submit-btn.reveal {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 10px 30px rgba(245,87,108,0.4);
+        }
+        
+        .back-btn {
+            margin-top: 15px;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:active {
+            background: rgba(255,255,255,0.1);
+        }
+        
         .hidden {
+            display: none !important;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 15px;
             display: none;
+        }
+        
+        .progress-bar.show {
+            display: block;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: progress 2s ease-in-out;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🕵️ Secret Bot</h1>
-        
-        <button class="btn btn-hide" onclick="showHide()">🔒 Спрятать текст</button>
-        <button class="btn btn-reveal" onclick="showReveal()">🔓 Расшифровать</button>
-        
-        <div id="hideForm" class="hidden">
-            <div class="input-group">
-                <label>📎 Выбери картинку (PNG):</label>
-                <input type="file" id="imageFile" accept="image/png">
-            </div>
-            <div class="input-group">
-                <label>✍️ Секретный текст:</label>
-                <textarea id="secretText" placeholder="Введи текст..."></textarea>
-            </div>
-            <button class="btn btn-hide" onclick="sendHide()">Отправить боту</button>
+        <div class="header">
+            <div class="logo">️</div>
+            <h1>Secret Bot</h1>
+            <div class="subtitle">Прячь секреты в картинках</div>
         </div>
         
-        <div id="revealForm" class="hidden">
-            <div class="input-group">
-                <label>📎 Выбери шпионскую картинку:</label>
-                <input type="file" id="revealFile" accept="image/png">
+        <div id="mainMenu" class="mode-selector">
+            <button class="mode-btn hide" onclick="showHideForm()">
+                <span class="mode-icon">🔒</span>
+                <span>Спрятать текст</span>
+            </button>
+            <button class="mode-btn reveal" onclick="showRevealForm()">
+                <span class="mode-icon">🔓</span>
+                <span>Расшифровать</span>
+            </button>
+        </div>
+        
+        <div id="hideForm" class="form-container hidden">
+            <div class="form-title">🔒 Спрятать текст</div>
+            
+            <div class="upload-zone" id="hideUploadZone" onclick="document.getElementById('hideImage').click()">
+                <input type="file" id="hideImage" accept="image/png,image/jpeg" onchange="handleImageSelect(this, 'hide')">
+                <div class="upload-icon"></div>
+                <div class="upload-text">Нажми или перетащи картинку</div>
             </div>
-            <button class="btn btn-reveal" onclick="sendReveal()">Расшифровать</button>
+            
+            <div class="preview-container" id="hidePreview">
+                <img class="preview-image" id="hidePreviewImg">
+                <button class="remove-image" onclick="removeImage('hide')">✕</button>
+            </div>
+            
+            <div class="input-group">
+                <label>✍️ Секретный текст:</label>
+                <textarea id="secretText" placeholder="Введи текст, который хочешь спрятать..."></textarea>
+            </div>
+            
+            <button class="submit-btn" onclick="sendHide()">
+                🔐 Спрятать текст
+            </button>
+            <div class="progress-bar" id="hideProgress">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <button class="back-btn" onclick="backToMenu()">← Назад</button>
+        </div>
+        
+        <div id="revealForm" class="form-container hidden">
+            <div class="form-title"> Расшифровать</div>
+            
+            <div class="upload-zone" id="revealUploadZone" onclick="document.getElementById('revealImage').click()">
+                <input type="file" id="revealImage" accept="image/png,image/jpeg" onchange="handleImageSelect(this, 'reveal')">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Выбери шпионскую картинку</div>
+            </div>
+            
+            <div class="preview-container" id="revealPreview">
+                <img class="preview-image" id="revealPreviewImg">
+                <button class="remove-image" onclick="removeImage('reveal')">✕</button>
+            </div>
+            
+            <button class="submit-btn reveal" onclick="sendReveal()">
+                🔍 Расшифровать
+            </button>
+            <div class="progress-bar" id="revealProgress">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <button class="back-btn" onclick="backToMenu()">← Назад</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
         
-        function showHide() {
+        let selectedImage = null;
+        
+        function showHideForm() {
+            document.getElementById('mainMenu').classList.add('hidden');
             document.getElementById('hideForm').classList.remove('hidden');
-            document.getElementById('revealForm').classList.add('hidden');
         }
         
-        function showReveal() {
+        function showRevealForm() {
+            document.getElementById('mainMenu').classList.add('hidden');
             document.getElementById('revealForm').classList.remove('hidden');
+        }
+        
+        function backToMenu() {
+            document.getElementById('mainMenu').classList.remove('hidden');
             document.getElementById('hideForm').classList.add('hidden');
+            document.getElementById('revealForm').classList.add('hidden');
+            resetForms();
+        }
+        
+        function handleImageSelect(input, type) {
+            const file = input.files[0];
+            if (file) {
+                selectedImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(type + 'PreviewImg').src = e.target.result;
+                    document.getElementById(type + 'Preview').classList.add('show');
+                    document.getElementById(type + 'UploadZone').classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function removeImage(type) {
+            selectedImage = null;
+            document.getElementById(type + 'Image').value = '';
+            document.getElementById(type + 'Preview').classList.remove('show');
+            document.getElementById(type + 'UploadZone').classList.remove('has-image');
+        }
+        
+        function resetForms() {
+            removeImage('hide');
+            removeImage('reveal');
+            document.getElementById('secretText').value = '';
+            document.getElementById('hideProgress').classList.remove('show');
+            document.getElementById('revealProgress').classList.remove('show');
         }
         
         function sendHide() {
-            const file = document.getElementById('imageFile').files[0];
             const text = document.getElementById('secretText').value;
             
-            if (!file || !text) {
-                tg.showAlert('Заполни все поля!');
+            if (!selectedImage || !text) {
+                tg.showAlert('Выбери картинку и введи текст!');
                 return;
             }
             
-            const data = JSON.stringify({
-                action: 'hide',
-                text: text,
-                fileName: file.name
-            });
+            document.getElementById('hideProgress').classList.add('show');
             
-            tg.sendData(data);
+            setTimeout(() => {
+                const data = JSON.stringify({
+                    action: 'hide',
+                    text: text,
+                    fileName: selectedImage.name
+                });
+                tg.sendData(data);
+                tg.close();
+            }, 1500);
         }
         
         function sendReveal() {
-            const file = document.getElementById('revealFile').files[0];
-            
-            if (!file) {
+            if (!selectedImage) {
                 tg.showAlert('Выбери картинку!');
                 return;
             }
             
-            const data = JSON.stringify({
-                action: 'reveal',
-                fileName: file.name
-            });
+            document.getElementById('revealProgress').classList.add('show');
             
-            tg.sendData(data);
+            setTimeout(() => {
+                const data = JSON.stringify({
+                    action: 'reveal',2
+                    fileName: selectedImage.name
+                });
+                tg.sendData(data);
+                tg.close();
+            }, 1500);
         }
     </script>
 </body>
